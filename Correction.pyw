@@ -1,13 +1,8 @@
 from random import shuffle
 import random
 import tweepy
-
 from data import data as d
-
-consumer_key = 'CONSUMER_KEY'
-consumer_secret = 'CONSUMER_SECRET'
-access_token = 'ACCESS_TOKEN'
-access_token_secret = 'ACCESS_SECRET'
+from secrets import *
 
 class Correction:
     def __init__(self, misspelled, correctionData):
@@ -38,7 +33,7 @@ class Correction:
     def getCorrection(self):
         return self.correction
     
-def correctATweet(correction):   
+def correctATweet(correction):
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
@@ -46,16 +41,18 @@ def correctATweet(correction):
     shuffle(twt)
     while(twt):      
         s = twt.pop()
-        print(s.text)
-        sn = s.user.screen_name
-        id_str = s.id_str
-        print(sn)
-        url = "https://twitter.com/" + sn + "/status/" + id_str
+        # don't take action on this tweet if it's an RT
+        if not hasattr(s, 'retweeted_status'):
+            # don't take action on this tweet if it is not permissable
+            if tweetIsPermissable(s):
+                sn = s.user.screen_name
+                id_str = s.id_str
+                url = "https://twitter.com/" + sn + "/status/" + id_str
 
-        msg = "'%s' has been misspelled as '%s' by @%s\n%s\n\nRemember: %s" % (correction.getWord(), correction.getMisspelled(), sn, url, correction.getCorrection())
-        if(len(msg) <= 140):
-            s = api.update_status(msg)
-            return True
+                msg = "'%s' has been misspelled as '%s' by @%s\n%s\n\nRemember: %s" % (correction.getWord(), correction.getMisspelled(), sn, url, correction.getCorrection())
+                if(len(msg) <= 140):
+                    s = api.update_status(msg)
+                    return True
     return False     
 
 def constructWords():
@@ -64,6 +61,17 @@ def constructWords():
         corr = Correction(key, d[key])
         words.append(corr)
     return words
+
+def tweetIsPermissable(status):
+    permissable = True
+    hashtags = status.entities.get('hashtags')
+    originalAuthorHandle = status.in_reply_to_screen_name
+    text = status.text
+    for word in sensitiveWords:
+        if word in text or word in hashtags or (originalAuthorHandle is not None and word in originalAuthorHandle):
+            permissable = False
+    return permissable
+
    
 def main():
     words = constructWords()
