@@ -21,7 +21,6 @@ data = {
     "concious": ["conscious", "-sc- in the middle"],
     "curiousity": ["curiosity", "-os- in the middle"],
     "definately": ["definitely", "-ite- not -ate-"],
-    "dilemna": ["dilemma", "-mm- not -mn-"],
     "dissapear": ["disappear", "one s, two p's"],
     "dissapoint": ["disappoint", "one s, two p's"],
     "embarass": ["embarrass", "two r's, two s’s"],
