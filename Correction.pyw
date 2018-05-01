@@ -4,6 +4,8 @@ import tweepy
 from data import data as d
 from secrets import *
 
+BOT_HANDLE = "botspelling"
+
 class Correction:
     def __init__(self, misspelled, correctionData):
         mispChoices = [x.strip() for x in misspelled.split(',')]   
@@ -64,11 +66,20 @@ def constructWords():
 
 def tweetIsPermissable(status):
     permissable = True
-    hashtags = status.entities.get('hashtags')
+    hashtags = status.entities['hashtags']
+    if len(hashtags)> 0:
+        if isinstance(hashtags,dict):
+            hashtagsUpper = [x.upper() for x, v in hashtags.items()]
+        else:
+            hashtagsUpper = []
+            for dic in hashtags:
+                hashtagsUpper.append(dic['text'].upper())
+    else:
+        hashtagsUpper = []
     originalAuthorHandle = status.in_reply_to_screen_name
-    text = status.text
+    text = status.text.upper().split()
     for word in sensitiveWords:
-        if word in text or word in hashtags or (originalAuthorHandle is not None and word in originalAuthorHandle):
+        if word.upper() in text or word in hashtagsUpper or (originalAuthorHandle is not None and word in originalAuthorHandle) or originalAuthorHandle == BOT_HANDLE:
             permissable = False
     return permissable
 
